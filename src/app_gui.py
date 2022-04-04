@@ -8,7 +8,7 @@ Acknowledgments:
 The gui is mostly based on a tutorial from Youtube: https://youtu.be/RNEcewpVZUQ
 """
 import json
-from tkinter import Tk, Label, Canvas, Scrollbar, Entry, Button, END, RIGHT
+from tkinter import OptionMenu, StringVar, Tk, Label, Canvas, Scrollbar, Entry, Button, END, RIGHT
 from PIL import Image, ImageTk
 from chatbot import Chat  # the class containing functions needed to generate bot's response
 from NER_func import find_NER
@@ -30,6 +30,9 @@ with open("../intents.json") as file:
 
 # an array to guarantee proper alignment of responses
 DIAL_TAG = []
+
+# Language Options
+options = ['English', 'German', 'French']
 
 
 class ChatApplication:
@@ -89,6 +92,12 @@ class ChatApplication:
         # bottom label
         bottom_label = Label(self.window, bg=DARK_BLUE, height=80)
         bottom_label.place(relwidth=1, rely=0.825)
+        
+        # Language DropDown
+        self.language = StringVar() 
+        self.language.set("English")
+        drop = OptionMenu(self.window, self.language, 'English', 'French', 'German')
+        drop.place(relwidth=0.25, rely=0.01, relx=0.73)
 
         # input box for the user
         self.input_entry = Entry(bottom_label, bg=LIGHT_GRAY, fg=BLACK, font=FONT_MAIN)
@@ -114,9 +123,10 @@ class ChatApplication:
         Then the user enters the message, get their message and display the question and answer in the chat area
         '''
         msg = self.input_entry.get()
-        self._insert_message(msg)
+        language = self.language.get()
+        self._insert_message(msg, language)
 
-    def _insert_message(self, msg):
+    def _insert_message(self, msg, language):
         '''
         Adds 2 new messages to the chat area:
         1 for the question the user sent and the second is for the answer the bot gave
@@ -126,7 +136,7 @@ class ChatApplication:
 
         self.input_entry.delete(0, END)
         msg1 = f"{msg}"
-        msg2 = f"{self.chat.get_response(self.chat.predict_class(msg), INTENTS, find_NER(msg))}"
+        msg2 = f"{self.chat.get_response(self.chat.predict_class(msg), INTENTS, find_NER(msg), language)}"
         if not DIAL_TAG:
             y_coord_1 = 0
         else:

@@ -95,10 +95,15 @@ class Chat:
             return_list.append({'intent': self.classes[r[0]], 'probability': str(r[1])})
         return return_list
 
-    def get_response(self, intents_list, intents_json, ents):
+    def get_response(self, intents_list, intents_json, ents, language="English"):
         '''
         Generate a response of the bot, given the probable intents of a users and the list of all intents
         '''
+        
+        # translate if required
+        if language != 'English':
+            print(language)
+        
         if not intents_list:
             return random.choice(APOLOGIES)
         tag = intents_list[0]['intent']
