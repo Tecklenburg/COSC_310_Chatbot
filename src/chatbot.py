@@ -11,6 +11,7 @@ import json
 import pickle
 import nltk
 from nltk.stem import WordNetLemmatizer
+from translator import translate
 
 from response_model import ChatModel
 from prepare_training_data import build_training_data
@@ -99,11 +100,7 @@ class Chat:
         '''
         Generate a response of the bot, given the probable intents of a users and the list of all intents
         '''
-        
-        # translate if required
-        if language != 'English':
-            print(language)
-        
+              
         if not intents_list:
             return random.choice(APOLOGIES)
         tag = intents_list[0]['intent']
@@ -148,6 +145,13 @@ class Chat:
                 if i['tag'] == tag:
                     result = random.choice(i['responses'])
                     break
+        
+        # translate if required
+        if language == 'French':
+            result = translate(result, src='en', des='fr')
+        elif language == 'German':
+            result = translate(result, src='en', des='de')
+            
         return result
 
 
