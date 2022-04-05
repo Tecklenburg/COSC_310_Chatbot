@@ -78,10 +78,17 @@ class Chat:
                     bag[i] = 1
         return bag
 
-    def predict_class(self, sentence):
+    def predict_class(self, sentence, language="English"):
         '''
         Predict the class (intent) of a users' sentence
         '''
+        
+        # translate if required
+        if language == 'French':
+            sentence = translate(sentence, src='fr', des='en')
+        elif language == 'German':
+            sentence = translate(sentence, src='de', des='en')
+        
 
         sentence = self.spellchecker.autocorrect(sentence)
 
