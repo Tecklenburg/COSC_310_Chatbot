@@ -146,6 +146,8 @@ class Chat:
                 else:
                     info = self.entity_infos[entity]["contact"]
                     result = f"You can reach out to the {entity} here: {info}"
+        elif tag == "News":
+            result = "Tweets are coming here soon"
         else:
             list_of_intents = intents_json['intents']
             for i in list_of_intents:
@@ -154,9 +156,9 @@ class Chat:
                     break
         
         # translate if required
-        if language == 'French':
+        if language == 'French' and tag != "News":
             result = translate(result, src='en', des='fr')
-        elif language == 'German':
+        elif language == 'German' and tag != "News":
             result = translate(result, src='en', des='de')
             
         return result
