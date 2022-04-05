@@ -11,6 +11,7 @@ import json
 import pickle
 import nltk
 from nltk.stem import WordNetLemmatizer
+from translator import translate
 
 from response_model import ChatModel
 from prepare_training_data import build_training_data
@@ -77,10 +78,17 @@ class Chat:
                     bag[i] = 1
         return bag
 
-    def predict_class(self, sentence):
+    def predict_class(self, sentence, language="English"):
         '''
         Predict the class (intent) of a users' sentence
         '''
+        
+        # translate if required
+        if language == 'French':
+            sentence = translate(sentence, src='fr', des='en')
+        elif language == 'German':
+            sentence = translate(sentence, src='de', des='en')
+        
 
         sentence = self.spellchecker.autocorrect(sentence)
 
@@ -95,10 +103,11 @@ class Chat:
             return_list.append({'intent': self.classes[r[0]], 'probability': str(r[1])})
         return return_list
 
-    def get_response(self, intents_list, intents_json, ents):
+    def get_response(self, intents_list, intents_json, ents, language="English"):
         '''
         Generate a response of the bot, given the probable intents of a users and the list of all intents
         '''
+              
         if not intents_list:
             return random.choice(APOLOGIES)
         tag = intents_list[0]['intent']
@@ -143,6 +152,13 @@ class Chat:
                 if i['tag'] == tag:
                     result = random.choice(i['responses'])
                     break
+        
+        # translate if required
+        if language == 'French':
+            result = translate(result, src='en', des='fr')
+        elif language == 'German':
+            result = translate(result, src='en', des='de')
+            
         return result
 
 
