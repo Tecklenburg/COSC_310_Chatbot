@@ -3,7 +3,7 @@ import uuid
 import json
 
 def translate(text, src, des, key):
-    # Add your key and endpoint
+    '''translate from src to des using the microsoft translator api, code based on their intro'''
     endpoint = "https://api.cognitive.microsofttranslator.com"
 
     # Add your location, also known as region. The default is global.

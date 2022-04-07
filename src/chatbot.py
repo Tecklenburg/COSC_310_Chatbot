@@ -28,9 +28,12 @@ from spellchecker import SpellChecker
 from translator import translate
 from google_maps_client import GoogleMapsClient
 
+
+# -------------------------------- INSERT API KEYS AND TOKEN HERE --------------------------------
 GOOGLE_API_KEY = ''
 AZURE_API_KEY = ''
 TWITTER_TOKEN = ''
+# ------------------------------------------------------------------------------------------------
 
 # 5 versions of apologies in case the bot cannot identify user's request and therefore cannot reply
 APOLOGIES = ["Sorry, I do not understand you. Please, try rephrasing the question using synonyms or simpler words",
@@ -56,6 +59,7 @@ class Chat:
 
         self.chat_model = ChatModel(len(self.train_x[0]), len(self.train_y[0]))
         
+        # setup the maps client
         self.maps_client = GoogleMapsClient(api_key=GOOGLE_API_KEY, address='UBCO Kelowna')
         self.places_api_trigger = False
 
@@ -108,12 +112,14 @@ class Chat:
         if self.places_api_trigger:
             return sentence
         
+        # spellchecking
         sentence = self.spellchecker.autocorrect(sentence)
         
         bow = self.bag_words(sentence)
         res = self.chat_model.predict(bow)[0]
         err_border = 0.3
         results = [[i, r] for i, r in enumerate(res) if r > err_border]
+        
         # Sort by probability in reverse order
         results.sort(key=lambda x: x[1], reverse=True)
         return_list = []
@@ -125,6 +131,7 @@ class Chat:
         '''
         Generate a response of the bot, given the probable intents of a users and the list of all intents
         '''
+        # if places api triggered get the requested type of food to look for
         if self.places_api_trigger:
             # find places around UBCO
             search = self.maps_client.search(keyword=intents_list)
@@ -135,15 +142,17 @@ class Chat:
                 # choose random spot from results
                 ind = random.randint(0,len(search['results'])-1)
                 place_id = search['results'][ind]['place_id']
-                
+                # get the details for the selected spot
                 recom = self.maps_client.details(place_id)
                 try:
                     rating = recom['result']['rating']
                 except:
                     rating = "-"
+                # format the result
                 result = f"Check out {recom['result']['name']} (Rating:{rating})\n Location: {recom['result']['formatted_address']}\n url: {recom['result']['url']}"
                 
             self.places_api_trigger = False
+        # otherwise generate the response based on the intents
         else:     
             if not intents_list:
                 return random.choice(APOLOGIES)
@@ -184,10 +193,12 @@ class Chat:
                     info = self.entity_infos[entity]["contact"]
                     result = f"You can reach out to the {entity} here: {info}"
             
+            # if request for news, connect to the twitter API and get the latest posts from UBCO
             elif tag == "News":
                 tweets = get_tweets(TWITTER_TOKEN)
                 result = f"The latest UBC News from twitter are:\n{tweets}"
-                    
+            
+            # if food requested trigger the google places interaction and ask for preference     
             elif tag == "food":
                 self.places_api_trigger = True
                 result = "There is a variety of food available on and of Campus, what type of food are you looking for?"
@@ -199,7 +210,7 @@ class Chat:
                         result = random.choice(i['responses'])
                         break
         
-        # translate if required
+        # translate if required using azure translation
         if language == 'French':
             result = translate(result, src='en', des='fr', key=AZURE_API_KEY)
         elif language == 'German':
