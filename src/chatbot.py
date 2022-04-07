@@ -17,8 +17,12 @@ from response_model import ChatModel
 from prepare_training_data import build_training_data
 from data_importer import load_intents, load_entities
 
+from twitter_func import get_tweets
+
 from NER_func import find_NER
 from spellchecker import SpellChecker
+
+TWITTER_TOKEN = ''
 
 # 5 versions of apologies in case the bot cannot identify user's request and therefore cannot reply
 APOLOGIES = ["Sorry, I do not understand you. Please, try rephrasing the question using synonyms or simpler words",
@@ -147,7 +151,8 @@ class Chat:
                     info = self.entity_infos[entity]["contact"]
                     result = f"You can reach out to the {entity} here: {info}"
         elif tag == "News":
-            result = "Tweets are coming here soon"
+            tweets = get_tweets(TWITTER_TOKEN)
+            result = f"The latest UBC News from twitter are:\n{tweets}"
         else:
             list_of_intents = intents_json['intents']
             for i in list_of_intents:
