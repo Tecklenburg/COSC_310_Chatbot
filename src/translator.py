@@ -2,9 +2,8 @@ import requests
 import uuid
 import json
 
-def translate(text, src, des):
+def translate(text, src, des, key):
     # Add your key and endpoint
-    key = ""
     endpoint = "https://api.cognitive.microsofttranslator.com"
 
     # Add your location, also known as region. The default is global.

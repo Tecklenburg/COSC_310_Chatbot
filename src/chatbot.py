@@ -11,7 +11,7 @@ import json
 import pickle
 import nltk
 from nltk.stem import WordNetLemmatizer
-from translator import translate
+
 
 from response_model import ChatModel
 from prepare_training_data import build_training_data
@@ -19,6 +19,12 @@ from data_importer import load_intents, load_entities
 
 from NER_func import find_NER
 from spellchecker import SpellChecker
+
+from translator import translate
+from google_maps_client import GoogleMapsClient
+
+GOOGLE_API_KEY = ''
+AZURE_API_KEY = ''
 
 # 5 versions of apologies in case the bot cannot identify user's request and therefore cannot reply
 APOLOGIES = ["Sorry, I do not understand you. Please, try rephrasing the question using synonyms or simpler words",
@@ -44,6 +50,7 @@ class Chat:
 
         self.chat_model = ChatModel(len(self.train_x[0]), len(self.train_y[0]))
         
+        self.maps_client = GoogleMapsClient(api_key=GOOGLE_API_KEY, address='UBCO Kelowna')
         self.places_api_trigger = False
 
         with(open("pickle/words.pkl", "rb")) as word_file:
@@ -87,13 +94,16 @@ class Chat:
         
         # translate if required
         if language == 'French':
-            sentence = translate(sentence, src='fr', des='en')
+            sentence = translate(sentence, src='fr', des='en', key=AZURE_API_KEY)
         elif language == 'German':
-            sentence = translate(sentence, src='de', des='en')
+            sentence = translate(sentence, src='de', des='en', key=AZURE_API_KEY)
         
-
         sentence = self.spellchecker.autocorrect(sentence)
 
+        # if places api trigger forward search to get response via intents list
+        if self.places_api_trigger:
+            return sentence
+        
         bow = self.bag_words(sentence)
         res = self.chat_model.predict(bow)[0]
         err_border = 0.3
@@ -110,7 +120,20 @@ class Chat:
         Generate a response of the bot, given the probable intents of a users and the list of all intents
         '''
         if self.places_api_trigger:
-            result = "Response from the API"
+            # find places around UBCO
+            search = self.maps_client.search(keyword=intents_list)
+            # return message if nothing found
+            if search == {}:
+                result = "Sorry I could not find anything like this."
+            else:
+                # choose random spot from results
+                ind = random.randint(0,len(search[0])-1)
+                place_id = search['results'][ind]['place_id']
+                
+                recom = self.maps_client.details(place_id)
+                
+                result = f"Check out {recom['name']} (Rating:{recom['rating']})\n Location: {recom['result']['formatted_address']}\n url: {recom['url']}"
+                
             self.places_api_trigger = False
         else:     
             if not intents_list:
@@ -165,9 +188,9 @@ class Chat:
         
         # translate if required
         if language == 'French':
-            result = translate(result, src='en', des='fr')
+            result = translate(result, src='en', des='fr', key=AZURE_API_KEY)
         elif language == 'German':
-            result = translate(result, src='en', des='de')
+            result = translate(result, src='en', des='de', key=AZURE_API_KEY)
             
         return result
 
