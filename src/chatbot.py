@@ -43,6 +43,8 @@ class Chat:
         self.entity_infos = load_entities('../entity_infos.json')
 
         self.chat_model = ChatModel(len(self.train_x[0]), len(self.train_y[0]))
+        
+        self.places_api_trigger = False
 
         with(open("pickle/words.pkl", "rb")) as word_file:
             self.words = pickle.load(word_file)
@@ -107,51 +109,59 @@ class Chat:
         '''
         Generate a response of the bot, given the probable intents of a users and the list of all intents
         '''
-              
-        if not intents_list:
-            return random.choice(APOLOGIES)
-        tag = intents_list[0]['intent']
+        if self.places_api_trigger:
+            result = "Response from the API"
+            self.places_api_trigger = False
+        else:     
+            if not intents_list:
+                return random.choice(APOLOGIES)
+            tag = intents_list[0]['intent']
 
-        if tag in ["opening hours", "more information", "location info", "contact info"]:
-            ent_matches = []
-            for ent in ents:
-                if ent in self.entity_infos.keys():
-                    ent_matches.append(ent)
-            if len(ent_matches) > 0:
-                entity = random.choice(ent_matches)
-            else:
-                entity = []
+            if tag in ["opening hours", "more information", "location info", "contact info"]:
+                ent_matches = []
+                for ent in ents:
+                    if ent in self.entity_infos.keys():
+                        ent_matches.append(ent)
+                if len(ent_matches) > 0:
+                    entity = random.choice(ent_matches)
+                else:
+                    entity = []
 
-            if tag == "opening hours":
-                if not entity:
-                    result = "I am really sorry but I do not have infos on the opening hours."
-                else:
-                    info = self.entity_infos[entity]["opening hours"]
-                    result = f"The opening hours for the {entity} are {info}."
-            elif tag == "more information":
-                if not entity:
-                    result = "I am really sorry but I do not have further infos on it"
-                else:
-                    info = self.entity_infos[entity]["link"]
-                    result = f"You can find more infos on the {entity} here: {info}"
-            elif tag == "location info":
-                if not entity:
-                    result = "I am really sorry but I do not have location infos for it."
-                else:
-                    info = self.entity_infos[entity]["location"]
-                    result = f"The {entity} is located here: {info}"
-            elif tag == "contact info":
-                if not entity:
-                    result = "I am really sorry but I do not have contact infos."
+                if tag == "opening hours":
+                    if not entity:
+                        result = "I am really sorry but I do not have infos on the opening hours."
+                    else:
+                        info = self.entity_infos[entity]["opening hours"]
+                        result = f"The opening hours for the {entity} are {info}."
+                elif tag == "more information":
+                    if not entity:
+                        result = "I am really sorry but I do not have further infos on it"
+                    else:
+                        info = self.entity_infos[entity]["link"]
+                        result = f"You can find more infos on the {entity} here: {info}"
+                elif tag == "location info":
+                    if not entity:
+                        result = "I am really sorry but I do not have location infos for it."
+                    else:
+                        info = self.entity_infos[entity]["location"]
+                        result = f"The {entity} is located here: {info}"
+                elif tag == "contact info":
+                    if not entity:
+                        result = "I am really sorry but I do not have contact infos."
                 else:
                     info = self.entity_infos[entity]["contact"]
                     result = f"You can reach out to the {entity} here: {info}"
-        else:
-            list_of_intents = intents_json['intents']
-            for i in list_of_intents:
-                if i['tag'] == tag:
-                    result = random.choice(i['responses'])
-                    break
+                    
+            elif tag == "food":
+                self.places_api_trigger = True
+                result = "There is a variety of food available on and of Campus, what type of food are you looking for?"
+                
+            else:
+                list_of_intents = intents_json['intents']
+                for i in list_of_intents:
+                    if i['tag'] == tag:
+                        result = random.choice(i['responses'])
+                        break
         
         # translate if required
         if language == 'French':

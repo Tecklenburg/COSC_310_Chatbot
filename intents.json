@@ -8,8 +8,12 @@
     "responses": ["Hello, I am the UBCO Chatbot", "Hi, how can I help you today?", "Hello from UBCO, how can I help you?"]
     },
     {"tag":"farewell",
-    "patterns":["Thanks for your help, bye", "bye", "Thank you", "Good bye", "goodbye", "farewell"],
+    "patterns":["Thanks for your help, bye", "bye", "Good bye", "goodbye", "farewell"],
     "responses":["Have a nice day!", "I hope that helped, bye.", "Bye, hope to see you on Campus!"]
+    },
+    {"tag":"Anything else",
+    "patterns":["Thanks for your help", "Thank you", "Thanks", "Great thanks", "perfect thanks"],
+    "responses":["Happy to help, is there anything else I can help you woth!", "You are very welcome, you need help on anything else?"]
     },
     {"tag":"opening hours",
     "patterns":["When open", "When is open", "when can access", "When does open", "What are working hours", "when does close", "how long can I be in","opening hours"],
@@ -45,7 +49,7 @@
     },
     {"tag":"food",
     "patterns":["Are there any food places on campus", "What food is there on campus", "What if I am hungry", "Where can I eat on campus", "What if I want something to eat"],
-    "responses":["The campus offers a variety of cafes and food places, like Tim Hortons, Starbucks or the sushi place. We also have a big dining hall. Check it out here: https://food.ok.ubc.ca"]
+    "responses":["Google Places API takes care of this"]
     },
     {"tag":"transfer",
     "patterns":["How can I get to UBC", "How can I get to UBCO", "How to get to Kelowna from UBC", "travel to campus"],
