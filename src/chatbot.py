@@ -11,7 +11,7 @@ import json
 import pickle
 import nltk
 from nltk.stem import WordNetLemmatizer
-from translator import translate
+
 
 from response_model import ChatModel
 from prepare_training_data import build_training_data
@@ -19,6 +19,12 @@ from data_importer import load_intents, load_entities
 
 from NER_func import find_NER
 from spellchecker import SpellChecker
+
+from translator import translate
+from google_maps_client import GoogleMapsClient
+
+GOOGLE_API_KEY = ''
+AZURE_API_KEY = ''
 
 # 5 versions of apologies in case the bot cannot identify user's request and therefore cannot reply
 APOLOGIES = ["Sorry, I do not understand you. Please, try rephrasing the question using synonyms or simpler words",
@@ -43,6 +49,9 @@ class Chat:
         self.entity_infos = load_entities('../entity_infos.json')
 
         self.chat_model = ChatModel(len(self.train_x[0]), len(self.train_y[0]))
+        
+        self.maps_client = GoogleMapsClient(api_key=GOOGLE_API_KEY, address='UBCO Kelowna')
+        self.places_api_trigger = False
 
         with(open("pickle/words.pkl", "rb")) as word_file:
             self.words = pickle.load(word_file)
@@ -85,13 +94,16 @@ class Chat:
         
         # translate if required
         if language == 'French':
-            sentence = translate(sentence, src='fr', des='en')
+            sentence = translate(sentence, src='fr', des='en', key=AZURE_API_KEY)
         elif language == 'German':
-            sentence = translate(sentence, src='de', des='en')
+            sentence = translate(sentence, src='de', des='en', key=AZURE_API_KEY)
+
+        # if places api trigger forward search to get response via intents list
+        if self.places_api_trigger:
+            return sentence
         
-
         sentence = self.spellchecker.autocorrect(sentence)
-
+        
         bow = self.bag_words(sentence)
         res = self.chat_model.predict(bow)[0]
         err_border = 0.3
@@ -107,57 +119,81 @@ class Chat:
         '''
         Generate a response of the bot, given the probable intents of a users and the list of all intents
         '''
-              
-        if not intents_list:
-            return random.choice(APOLOGIES)
-        tag = intents_list[0]['intent']
-
-        if tag in ["opening hours", "more information", "location info", "contact info"]:
-            ent_matches = []
-            for ent in ents:
-                if ent in self.entity_infos.keys():
-                    ent_matches.append(ent)
-            if len(ent_matches) > 0:
-                entity = random.choice(ent_matches)
+        if self.places_api_trigger:
+            # find places around UBCO
+            search = self.maps_client.search(keyword=intents_list)
+            # return message if nothing found
+            if search == {}:
+                result = "Sorry I could not find anything like this."
             else:
-                entity = []
+                # choose random spot from results
+                ind = random.randint(0,len(search['results'])-1)
+                place_id = search['results'][ind]['place_id']
+                
+                recom = self.maps_client.details(place_id)
+                try:
+                    rating = recom['result']['rating']
+                except:
+                    rating = "-"
+                result = f"Check out {recom['result']['name']} (Rating:{rating})\n Location: {recom['result']['formatted_address']}\n url: {recom['result']['url']}"
+                
+            self.places_api_trigger = False
+        else:     
+            if not intents_list:
+                return random.choice(APOLOGIES)
+            tag = intents_list[0]['intent']
 
-            if tag == "opening hours":
-                if not entity:
-                    result = "I am really sorry but I do not have infos on the opening hours."
+            if tag in ["opening hours", "more information", "location info", "contact info"]:
+                ent_matches = []
+                for ent in ents:
+                    if ent in self.entity_infos.keys():
+                        ent_matches.append(ent)
+                if len(ent_matches) > 0:
+                    entity = random.choice(ent_matches)
                 else:
-                    info = self.entity_infos[entity]["opening hours"]
-                    result = f"The opening hours for the {entity} are {info}."
-            elif tag == "more information":
-                if not entity:
-                    result = "I am really sorry but I do not have further infos on it"
-                else:
-                    info = self.entity_infos[entity]["link"]
-                    result = f"You can find more infos on the {entity} here: {info}"
-            elif tag == "location info":
-                if not entity:
-                    result = "I am really sorry but I do not have location infos for it."
-                else:
-                    info = self.entity_infos[entity]["location"]
-                    result = f"The {entity} is located here: {info}"
-            elif tag == "contact info":
-                if not entity:
-                    result = "I am really sorry but I do not have contact infos."
+                    entity = []
+
+                if tag == "opening hours":
+                    if not entity:
+                        result = "I am really sorry but I do not have infos on the opening hours."
+                    else:
+                        info = self.entity_infos[entity]["opening hours"]
+                        result = f"The opening hours for the {entity} are {info}."
+                elif tag == "more information":
+                    if not entity:
+                        result = "I am really sorry but I do not have further infos on it"
+                    else:
+                        info = self.entity_infos[entity]["link"]
+                        result = f"You can find more infos on the {entity} here: {info}"
+                elif tag == "location info":
+                    if not entity:
+                        result = "I am really sorry but I do not have location infos for it."
+                    else:
+                        info = self.entity_infos[entity]["location"]
+                        result = f"The {entity} is located here: {info}"
+                elif tag == "contact info":
+                    if not entity:
+                        result = "I am really sorry but I do not have contact infos."
                 else:
                     info = self.entity_infos[entity]["contact"]
                     result = f"You can reach out to the {entity} here: {info}"
-        else:
-            list_of_intents = intents_json['intents']
-            for i in list_of_intents:
-                if i['tag'] == tag:
-                    result = random.choice(i['responses'])
-                    break
+                    
+            elif tag == "food":
+                self.places_api_trigger = True
+                result = "There is a variety of food available on and of Campus, what type of food are you looking for?"
+                
+            else:
+                list_of_intents = intents_json['intents']
+                for i in list_of_intents:
+                    if i['tag'] == tag:
+                        result = random.choice(i['responses'])
+                        break
         
         # translate if required
         if language == 'French':
-            result = translate(result, src='en', des='fr')
+            result = translate(result, src='en', des='fr', key=AZURE_API_KEY)
         elif language == 'German':
-            result = translate(result, src='en', des='de')
+            result = translate(result, src='en', des='de', key=AZURE_API_KEY)
             
         return result
 
