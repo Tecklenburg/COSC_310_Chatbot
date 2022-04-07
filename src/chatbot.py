@@ -97,12 +97,12 @@ class Chat:
             sentence = translate(sentence, src='fr', des='en', key=AZURE_API_KEY)
         elif language == 'German':
             sentence = translate(sentence, src='de', des='en', key=AZURE_API_KEY)
-        
-        sentence = self.spellchecker.autocorrect(sentence)
 
         # if places api trigger forward search to get response via intents list
         if self.places_api_trigger:
             return sentence
+        
+        sentence = self.spellchecker.autocorrect(sentence)
         
         bow = self.bag_words(sentence)
         res = self.chat_model.predict(bow)[0]
@@ -127,12 +127,15 @@ class Chat:
                 result = "Sorry I could not find anything like this."
             else:
                 # choose random spot from results
-                ind = random.randint(0,len(search[0])-1)
+                ind = random.randint(0,len(search['results'])-1)
                 place_id = search['results'][ind]['place_id']
                 
                 recom = self.maps_client.details(place_id)
-                
-                result = f"Check out {recom['name']} (Rating:{recom['rating']})\n Location: {recom['result']['formatted_address']}\n url: {recom['url']}"
+                try:
+                    rating = recom['result']['rating']
+                except:
+                    rating = "-"
+                result = f"Check out {recom['result']['name']} (Rating:{rating})\n Location: {recom['result']['formatted_address']}\n url: {recom['result']['url']}"
                 
             self.places_api_trigger = False
         else:     
