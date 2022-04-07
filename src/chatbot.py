@@ -30,9 +30,7 @@ from google_maps_client import GoogleMapsClient
 
 
 # -------------------------------- INSERT API KEYS AND TOKEN HERE --------------------------------
-GOOGLE_API_KEY = ''
-AZURE_API_KEY = ''
-TWITTER_TOKEN = ''
+
 # ------------------------------------------------------------------------------------------------
 
 # 5 versions of apologies in case the bot cannot identify user's request and therefore cannot reply
