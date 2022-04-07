@@ -17,14 +17,20 @@ from response_model import ChatModel
 from prepare_training_data import build_training_data
 from data_importer import load_intents, load_entities
 
+from twitter_func import get_tweets
+
 from NER_func import find_NER
 from spellchecker import SpellChecker
+
+
+
 
 from translator import translate
 from google_maps_client import GoogleMapsClient
 
 GOOGLE_API_KEY = ''
 AZURE_API_KEY = ''
+TWITTER_TOKEN = ''
 
 # 5 versions of apologies in case the bot cannot identify user's request and therefore cannot reply
 APOLOGIES = ["Sorry, I do not understand you. Please, try rephrasing the question using synonyms or simpler words",
@@ -177,6 +183,10 @@ class Chat:
                 else:
                     info = self.entity_infos[entity]["contact"]
                     result = f"You can reach out to the {entity} here: {info}"
+            
+            elif tag == "News":
+                tweets = get_tweets(TWITTER_TOKEN)
+                result = f"The latest UBC News from twitter are:\n{tweets}"
                     
             elif tag == "food":
                 self.places_api_trigger = True
