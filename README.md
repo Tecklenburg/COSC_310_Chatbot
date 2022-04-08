@@ -25,6 +25,13 @@ The purpose of this chatbot is to help students and interested people to navigat
 - To run a specific test
     - Run `python -m unittest <test_file>.<TestClass>.<test_name>`
 
+NOTE: Some tests fail without entering a proper API Key, but pass fine with one.
+**Snippet:**
+
+   ![Tests Pass](documentation/snippets/Tests_OK.png)
+
+
+
 ### Important Note: 
 Run all tests from the `tests` directory. 
 This ensures the mock files are located correctly by Python.
