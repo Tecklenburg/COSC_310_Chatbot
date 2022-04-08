@@ -32,6 +32,11 @@ This ensures the mock files are located correctly by Python.
 ## Running the Application
 Run `python chatbot_run.py` to start the application.
 
+## Encorporated APIs
+- Twitter API for UBCO News implementation
+- Google Maps and Places API for food recommendations around UBCO
+- Microsoft Translator API for interaction in French and German
+
 ## The list of features
 
 ### Named Entity recognition using Spacy
