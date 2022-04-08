@@ -1,6 +1,7 @@
 import tweepy
 
 def get_tweets(Token):
+    '''use tweepy to get the latest tweets from UBCO'''
     userID = "ubconews"
 
     client = tweepy.Client(bearer_token=Token)

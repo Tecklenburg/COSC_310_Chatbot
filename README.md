@@ -74,6 +74,27 @@ The chatbot uses a threshold on the intents prediction and under a certain thres
    ![Thresh snippet](documentation/snippets/Thresh_topic.png)
     
 
+## Individual Assignment
 
+### Translation to make the Bot multilingual
+The chatbot uses the microsoft translator api to communicate in french and german besides english, by translating to english once an input is received adn back when returning his response. New languages can be easily added by expanding the options and adjusting the chatbot slightly.
 
+   **Snippet:**
 
+   ![English snippet](documentation/snippets/English_hello.png)
+   ![French snippet](documentation/snippets/French_hello.png)
+   ![German snippet](documentation/snippets/German_hello.png)
+
+### Food Recommendations using Google Maps and Google Places
+The chatbot is able to recommend food places around Campus based on your entered preferences. For this the bot first extracts the coordinates of UBCO using Google Maps API (Can be easily adapted for other institutions with different locations). In the next step the bot asks you for your prefrences and uses these to search places around you, calling the Google places API with this keyword. Finally it extracts randomly a place from the returned list and gets the details for this place using again the places API and returns them.
+
+   **Snippet:**
+
+   ![Foodplaces snippet](documentation/snippets/Food_places_recommendation.png)
+
+### UBCO News, using the Twitter API
+The chatbot is able to share the latest tweets of UBCO, using the twitter API. It connects to the twitter API using tweepy and extracts the content of the last 3 tweets from the official UBCO twitter channel. (This is easily expandable for various other accounts e.g. the one from UBCO heat).
+
+   **Snippet:**
+
+   ![Twitter snippet](documentation/snippets/Twitter_News.png)
