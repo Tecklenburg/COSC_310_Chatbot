@@ -2,9 +2,13 @@ import requests
 import uuid
 import json
 
-def translate(text, src, des, key):
+def translate(text, src, des, key=None):
     '''translate from src to des using the microsoft translator api, code based on their intro'''
     endpoint = "https://api.cognitive.microsofttranslator.com"
+    
+    # raise error if key is missing
+    if key == None:
+        raise Exception('No key supplied')
 
     # Add your location, also known as region. The default is global.
     # This is required if using a Cognitive Services resource.
